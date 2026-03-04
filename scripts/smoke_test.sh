@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-API_URL="${1:?Usage: $0 <API_URL>}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TFDIR="${SCRIPT_DIR}/../infra/envs/dev"
+
+if [ -n "${1:-}" ]; then
+  API_URL="$1"
+else
+  echo "No URL provided — fetching from Terraform output..."
+  API_URL="$(terraform -chdir="${TFDIR}" output -raw api_base_url)"
+fi
 
 echo "[1/3] Health check..."
 curl -sf "${API_URL}/health" | jq .

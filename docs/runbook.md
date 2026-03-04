@@ -11,25 +11,36 @@ bash bootstrap_backend.sh
 
 Copy the printed output into `infra/envs/dev/backend.hcl` (gitignored).
 
-## 2. Deploy
+## 2. Set your email (gitignored)
+
+Create `infra/envs/dev/dev.auto.tfvars` (gitignored — never commit this):
+
+```hcl
+budget_alert_email = "your-email@example.com"
+```
+
+## 3. Deploy
 
 ```bash
 cd infra/envs/dev
-
-terraform init -backend-config=backend.hcl
-terraform plan -var="budget_alert_email=your-email@example.com"
-terraform apply -var="budget_alert_email=your-email@example.com"
+terraform init -backend-config=backend.hcl -reconfigure
+terraform plan -out=tfplan
+terraform apply tfplan
 ```
 
 The API base URL is printed as the `api_base_url` output.
 
-## 3. Run the smoke test
+## 4. Run the smoke test
 
 ```bash
-bash scripts/smoke_test.sh <api_base_url>
+# Auto-fetches API URL from Terraform output
+bash scripts/smoke_test.sh
+
+# Or pass the URL explicitly
+bash scripts/smoke_test.sh https://abc123.execute-api.us-east-1.amazonaws.com
 ```
 
-## 4. Run unit tests
+## 5. Run unit tests
 
 ```bash
 cd services/api
@@ -37,11 +48,11 @@ pip install -r requirements-dev.txt
 pytest tests/
 ```
 
-## 5. Destroy
+## 6. Destroy
 
 ```bash
 cd infra/envs/dev
-terraform destroy -var="budget_alert_email=your-email@example.com"
+terraform destroy
 ```
 
 This does **not** delete the S3 state bucket or DynamoDB lock table (bootstrap resources). Remove those manually if no longer needed.

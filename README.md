@@ -20,24 +20,34 @@ bash scripts/bootstrap_backend.sh
 # Copy the printed values into infra/envs/dev/backend.hcl
 ```
 
-### 2. Deploy
+### 2. Set your email (gitignored)
+
+```bash
+cat > infra/envs/dev/dev.auto.tfvars <<EOF
+budget_alert_email = "your-email@example.com"
+EOF
+```
+
+### 3. Deploy
 
 ```bash
 cd infra/envs/dev
-terraform init -backend-config=backend.hcl
-terraform apply -var="budget_alert_email=your-email@example.com"
+terraform init -backend-config=backend.hcl -reconfigure
+terraform plan -out=tfplan
+terraform apply tfplan
 ```
 
-### 3. Smoke test
+### 4. Smoke test
 
 ```bash
-bash scripts/smoke_test.sh <api_base_url>
+# Auto-fetches the API URL from Terraform output
+bash scripts/smoke_test.sh
 ```
 
-### 4. Destroy
+### 5. Destroy
 
 ```bash
-terraform destroy -var="budget_alert_email=your-email@example.com"
+terraform destroy
 ```
 
 ## Cost guardrails
@@ -49,10 +59,16 @@ terraform destroy -var="budget_alert_email=your-email@example.com"
 
 ## Enabling Cognito auth
 
+Add to `infra/envs/dev/dev.auto.tfvars`:
+
+```hcl
+enable_cognito = true
+```
+
+Then re-plan and apply:
+
 ```bash
-terraform apply \
-  -var="enable_cognito=true" \
-  -var="budget_alert_email=your-email@example.com"
+terraform plan -out=tfplan && terraform apply tfplan
 ```
 
 When enabled, `POST /items` and `GET /items/{id}` require a valid Cognito JWT in the `Authorization` header. `GET /health` remains public.

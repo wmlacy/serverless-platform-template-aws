@@ -7,6 +7,11 @@
 # Backend config (contains bucket/table names — commit backend.hcl.example instead)
 backend.hcl
 
+# Local variable overrides (contain real emails, account IDs, etc.)
+*.auto.tfvars
+*.tfvars
+!*.tfvars.example
+
 # Lambda build artifact
 lambda_package.zip
 /tmp/*.zip
