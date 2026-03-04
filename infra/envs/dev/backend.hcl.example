@@ -1,0 +1,11 @@
+# Copy this file to backend.hcl and fill in your actual values.
+# backend.hcl is gitignored to keep bucket names and account details
+# out of your git history.
+#
+# Run: scripts/bootstrap_backend.sh — it will print the exact values to paste here.
+
+bucket         = "spt-terraform-state-<YOUR_ACCOUNT_ID>"
+key            = "spt/dev/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "spt-terraform-locks"
+encrypt        = true

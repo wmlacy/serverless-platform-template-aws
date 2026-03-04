@@ -1,0 +1,23 @@
+# Terraform state
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Backend config (contains bucket/table names — commit backend.hcl.example instead)
+backend.hcl
+
+# Lambda build artifact
+lambda_package.zip
+/tmp/*.zip
+
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.python-version
+
+# macOS
+.DS_Store
