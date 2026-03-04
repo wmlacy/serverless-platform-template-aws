@@ -57,7 +57,54 @@ terraform destroy
 
 This does **not** delete the S3 state bucket or DynamoDB lock table (bootstrap resources). Remove those manually if no longer needed.
 
-## Common failure modes
+## Common errors and fixes
+
+### 401 Unauthorized
+Cognito is enabled and the request is missing or has an expired JWT.
+- Check `enable_cognito` in your tfvars.
+- Get a fresh token: see [docs/cognito.md](cognito.md).
+- Pass the token as `Authorization: <token>` (no "Bearer" prefix for Cognito HTTP API).
+
+### 403 Forbidden
+JWT is present but invalid — wrong audience, issuer, or user pool.
+- Confirm `cognito_client_id` and `cognito_issuer_url` match Terraform outputs.
+- Re-fetch the token for the correct client ID.
+
+### 500 Internal Server Error
+Lambda threw an unhandled exception. Check the logs:
+```bash
+aws logs tail /aws/lambda/spt-dev-api --follow --region us-east-1
+```
+Common causes: `TABLE_NAME` env var missing, IAM permission denied on DynamoDB.
+
+### DynamoDB AccessDeniedException
+The Lambda IAM role is missing a required permission.
+- Verify `modules/iam/main.tf` includes `dynamodb:GetItem` and `dynamodb:PutItem`.
+- Verify the `Resource` ARN matches the actual table ARN (`terraform output table_name`).
+- Re-apply Terraform after any IAM change.
+
+### Missing TABLE_NAME environment variable
+Lambda logs show `KeyError: 'TABLE_NAME'`.
+- Check `modules/lambda_api/main.tf` — the `TABLE_NAME` env var must be set.
+- Re-apply Terraform.
+
+### How to check CloudWatch logs
+```bash
+# Lambda logs (live tail)
+aws logs tail /aws/lambda/spt-dev-api --follow --region us-east-1
+
+# API Gateway access logs
+aws logs tail /aws/apigateway/spt-dev-api --follow --region us-east-1
+```
+
+### How to rerun the smoke test
+```bash
+bash scripts/smoke_test.sh
+# or with an explicit URL:
+bash scripts/smoke_test.sh https://abc123.execute-api.us-east-1.amazonaws.com
+```
+
+## Terraform failure modes
 
 ### `Error: NoCredentialsError`
 Your AWS credentials are not configured. Run `aws configure` or export `AWS_PROFILE`.

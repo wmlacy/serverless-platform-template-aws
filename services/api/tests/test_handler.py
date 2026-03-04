@@ -13,8 +13,8 @@ from handler import handler
 TABLE_NAME = "spt-dev-items"
 
 
-def _event(method, path, body=None, path_params=None):
-    return {
+def _event(method, path, body=None, path_params=None, correlation_id=None):
+    event = {
         "requestContext": {
             "requestId": "test-request-id",
             "http": {"method": method},
@@ -22,7 +22,11 @@ def _event(method, path, body=None, path_params=None):
         "rawPath": path,
         "pathParameters": path_params or {},
         "body": json.dumps(body) if body is not None else None,
+        "headers": {},
     }
+    if correlation_id:
+        event["headers"]["x-correlation-id"] = correlation_id
+    return event
 
 
 @moto.mock_aws
@@ -70,6 +74,15 @@ class TestHandler(unittest.TestCase):
     def test_get_item_not_found_returns_404(self):
         resp = handler(_event("GET", "/items/missing", path_params={"id": "missing"}), None)
         self.assertEqual(resp["statusCode"], 404)
+
+    def test_correlation_id_returned_in_header(self):
+        resp = handler(_event("GET", "/health", correlation_id="my-trace-id"), None)
+        self.assertEqual(resp["headers"]["X-Correlation-Id"], "my-trace-id")
+
+    def test_correlation_id_generated_when_absent(self):
+        resp = handler(_event("GET", "/health"), None)
+        self.assertIn("X-Correlation-Id", resp["headers"])
+        self.assertTrue(len(resp["headers"]["X-Correlation-Id"]) > 0)
 
 
 if __name__ == "__main__":
