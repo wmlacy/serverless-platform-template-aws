@@ -47,6 +47,7 @@ bash scripts/smoke_test.sh
 ### 5. Destroy
 
 ```bash
+cd infra/envs/dev
 terraform destroy
 ```
 
@@ -59,7 +60,9 @@ terraform destroy
 
 ## 5-minute demo
 
-After deploy, the API is live immediately. Real output from a working deployment:
+After deploy, the API is live immediately. Real output from a working deployment.
+
+> `jq` is used for pretty-printing below — remove `| jq .` if you don't have it installed.
 
 ```bash
 cd infra/envs/dev
@@ -84,7 +87,7 @@ curl -sS -X POST "$API_URL/items" \
 ```
 ```json
 {
-  "id": "item-1772683861"
+  "id": "item-<timestamp>"
 }
 ```
 
@@ -94,7 +97,7 @@ curl -sS "$API_URL/items/$ID" | jq .
 ```
 ```json
 {
-  "id": "item-1772683861",
+  "id": "item-<timestamp>",
   "name": "demo"
 }
 ```
@@ -111,6 +114,7 @@ bash scripts/smoke_test.sh
 - DynamoDB: PAY_PER_REQUEST (no idle cost)
 - Lambda: outside VPC (no NAT Gateway)
 - No provisioned concurrency
+- CloudWatch logs: 14-day retention on all log groups
 - $5/month budget alert — **set `budget_alert_email` before apply**
 
 ## Enabling Cognito auth
@@ -140,7 +144,7 @@ TOKEN=$(aws cognito-idp initiate-auth \
   --output text)
 
 curl -sS "$API_URL/items/abc" \
-  -H "Authorization: $TOKEN" | jq .
+  -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
 See [docs/cognito.md](docs/cognito.md) for the full setup guide.
