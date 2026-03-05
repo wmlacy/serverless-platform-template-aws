@@ -155,6 +155,16 @@ See [docs/cognito.md](docs/cognito.md) for the full setup guide.
 - Add DynamoDB attributes: update `modules/dynamodb_table/main.tf` and the IAM policy in `modules/iam/main.tf`
 - Add environments: copy `infra/envs/dev/` to `infra/envs/prod/` and update the backend key
 
+## Deployment proof
+
+CloudWatch log retention configured:
+
+![Log retention](docs/screenshots/log-retention.png)
+
+CloudWatch alarms configured:
+
+![CloudWatch alarms](docs/screenshots/alarms.png)
+
 ## More detail
 
 See [docs/runbook.md](docs/runbook.md) for deploy, test, destroy, and troubleshooting steps.
