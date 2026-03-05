@@ -40,7 +40,7 @@ terraform apply tfplan
 ### 4. Smoke test
 
 ```bash
-# Auto-fetches the API URL from Terraform output
+# Run from repo root — auto-fetches the API URL from Terraform output
 bash scripts/smoke_test.sh
 ```
 
@@ -48,6 +48,62 @@ bash scripts/smoke_test.sh
 
 ```bash
 terraform destroy
+```
+
+## Outputs
+
+- `api_base_url` — base URL of the deployed API (e.g. `https://abc123.execute-api.us-east-1.amazonaws.com`)
+- `lambda_function_name` — name of the Lambda function
+- `lambda_log_group` — CloudWatch log group path
+- `dynamodb_table_name` — DynamoDB table name
+
+## 5-minute demo
+
+After deploy, the API is live immediately. Real output from a working deployment:
+
+```bash
+cd infra/envs/dev
+API_URL=$(terraform output -raw api_base_url)
+
+# 1) Health
+curl -sS "$API_URL/health" | jq .
+```
+```json
+{
+  "status": "ok"
+}
+```
+
+```bash
+# 2) Create an item
+ID="item-$(date +%s)"
+curl -sS -X POST "$API_URL/items" \
+  -H "Content-Type: application/json" \
+  -H "X-Correlation-Id: demo-123" \
+  -d "{\"id\":\"$ID\",\"name\":\"demo\"}" | jq .
+```
+```json
+{
+  "id": "item-1772683861"
+}
+```
+
+```bash
+# 3) Read it back
+curl -sS "$API_URL/items/$ID" | jq .
+```
+```json
+{
+  "id": "item-1772683861",
+  "name": "demo"
+}
+```
+
+Or run the full smoke test in one command (from repo root):
+
+```bash
+bash scripts/smoke_test.sh
+# Smoke test passed.
 ```
 
 ## Cost guardrails
@@ -73,47 +129,27 @@ terraform plan -out=tfplan && terraform apply tfplan
 
 When enabled, `POST /items` and `GET /items/{id}` require a valid Cognito JWT in the `Authorization` header. `GET /health` remains public.
 
+```bash
+# Get a token (after creating a test user — see docs/cognito.md)
+TOKEN=$(aws cognito-idp initiate-auth \
+  --auth-flow USER_PASSWORD_AUTH \
+  --client-id <client_id> \
+  --auth-parameters USERNAME=testuser,PASSWORD="TestPass1!" \
+  --region us-east-1 \
+  --query "AuthenticationResult.IdToken" \
+  --output text)
+
+curl -sS "$API_URL/items/abc" \
+  -H "Authorization: $TOKEN" | jq .
+```
+
+See [docs/cognito.md](docs/cognito.md) for the full setup guide.
+
 ## Extending
 
 - Add routes: extend `handler.py` and add `aws_apigatewayv2_route` resources in `modules/apigw_http_api/main.tf`
 - Add DynamoDB attributes: update `modules/dynamodb_table/main.tf` and the IAM policy in `modules/iam/main.tf`
 - Add environments: copy `infra/envs/dev/` to `infra/envs/prod/` and update the backend key
-
-## 5-minute demo
-
-After deploy, the API is live immediately. Real output from a working deployment:
-
-```bash
-$ bash scripts/smoke_test.sh
-
-[1/3] Health check...
-{ "status": "ok" }
-
-[2/3] Create item...
-{ "id": "item-1772683099" }
-
-[3/3] Read item...
-{ "id": "item-1772683099", "ts": "2026-03-05T03:58:19Z", "name": "demo" }
-
-Smoke test passed.
-```
-
-Or hit the endpoints directly:
-
-```bash
-API_URL=$(terraform -chdir=infra/envs/dev output -raw api_base_url)
-
-curl -s "$API_URL/health"
-# {"status":"ok"}
-
-curl -s -X POST "$API_URL/items" \
-  -H "Content-Type: application/json" \
-  -d '{"id":"abc","name":"my item"}'
-# {"id":"abc"}
-
-curl -s "$API_URL/items/abc"
-# {"id":"abc","name":"my item","ts":"..."}
-```
 
 ## More detail
 
