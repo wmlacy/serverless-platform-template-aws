@@ -60,3 +60,13 @@ AWS Budgets
 | API Gateway | Per request | $0 |
 | CloudWatch Logs | Per GB ingested | ~$0 at low volume |
 | Budget | Free | $0 |
+
+## Screenshots
+
+CloudWatch alarms configured for Lambda errors, 5XX rate, and p99 latency:
+
+![CloudWatch alarms](screenshots/alarms.png)
+
+Log retention set to 14 days on all log groups:
+
+![Log retention](screenshots/log-retention.png)
