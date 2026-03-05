@@ -2,6 +2,14 @@
 
 A minimal, production-shaped serverless API on AWS using Terraform and Python 3.12. Designed to stay under $5/month at low traffic when deployed with the included guardrails.
 
+## What this demonstrates
+
+- Infrastructure-as-Code with Terraform
+- Serverless API design on AWS
+- Operational guardrails (log retention, budget alert, alarms)
+- Observability and troubleshooting workflow
+- Optional JWT authentication via Cognito
+
 ## What it is
 
 - **API Gateway HTTP API** — routes: `GET /health`, `POST /items`, `GET /items/{id}`
