@@ -12,6 +12,10 @@ backend.hcl
 *.tfvars
 !*.tfvars.example
 
+# Terraform plan files (binary, environment-specific)
+tfplan
+*.tfplan
+
 # Lambda build artifact
 lambda_package.zip
 /tmp/*.zip
