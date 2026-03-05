@@ -1,6 +1,6 @@
 # Serverless Platform Template (AWS)
 
-A minimal, production-shaped serverless API on AWS using Terraform and Python 3.12. Costs under $5/month at low traffic.
+A minimal, production-shaped serverless API on AWS using Terraform and Python 3.12. Designed to stay under $5/month at low traffic when deployed with the included guardrails.
 
 ## What it is
 
@@ -78,6 +78,42 @@ When enabled, `POST /items` and `GET /items/{id}` require a valid Cognito JWT in
 - Add routes: extend `handler.py` and add `aws_apigatewayv2_route` resources in `modules/apigw_http_api/main.tf`
 - Add DynamoDB attributes: update `modules/dynamodb_table/main.tf` and the IAM policy in `modules/iam/main.tf`
 - Add environments: copy `infra/envs/dev/` to `infra/envs/prod/` and update the backend key
+
+## 5-minute demo
+
+After deploy, the API is live immediately. Real output from a working deployment:
+
+```bash
+$ bash scripts/smoke_test.sh
+
+[1/3] Health check...
+{ "status": "ok" }
+
+[2/3] Create item...
+{ "id": "item-1772683099" }
+
+[3/3] Read item...
+{ "id": "item-1772683099", "ts": "2026-03-05T03:58:19Z", "name": "demo" }
+
+Smoke test passed.
+```
+
+Or hit the endpoints directly:
+
+```bash
+API_URL=$(terraform -chdir=infra/envs/dev output -raw api_base_url)
+
+curl -s "$API_URL/health"
+# {"status":"ok"}
+
+curl -s -X POST "$API_URL/items" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"abc","name":"my item"}'
+# {"id":"abc"}
+
+curl -s "$API_URL/items/abc"
+# {"id":"abc","name":"my item","ts":"..."}
+```
 
 ## More detail
 
